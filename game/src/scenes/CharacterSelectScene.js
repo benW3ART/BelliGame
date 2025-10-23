@@ -1,8 +1,16 @@
 import { GameConfig } from '../config.js';
+import { CharacterSprites } from '../CharacterSprites.js';
 
 export default class CharacterSelectScene extends Phaser.Scene {
     constructor() {
         super({ key: 'CharacterSelectScene' });
+    }
+
+    preload() {
+        // Générer tous les sprites des personnages si pas déjà fait
+        if (!this.textures.exists('sonic')) {
+            CharacterSprites.generateAllSprites(this);
+        }
     }
 
     create() {
@@ -58,12 +66,13 @@ export default class CharacterSelectScene extends Phaser.Scene {
         const bg = this.add.rectangle(0, 0, 200, 140, 0x34495e);
         bg.setStrokeStyle(4, character.color);
 
-        // Cercle représentant le personnage
-        const avatar = this.add.circle(0, -20, 40, character.color);
+        // Sprite du personnage
+        const avatar = this.add.sprite(0, -15, character.id);
+        avatar.setScale(0.5); // Taille réduite pour la carte
 
         // Nom du personnage
-        const name = this.add.text(0, 40, character.name, {
-            fontSize: '18px',
+        const name = this.add.text(0, 50, character.name, {
+            fontSize: '16px',
             fontFamily: 'Arial',
             color: '#ffffff',
             align: 'center',

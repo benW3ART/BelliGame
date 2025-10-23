@@ -1,4 +1,5 @@
 import { GameConfig } from '../config.js';
+import { CharacterSprites } from '../CharacterSprites.js';
 
 export default class GameScene extends Phaser.Scene {
     constructor() {
@@ -15,6 +16,13 @@ export default class GameScene extends Phaser.Scene {
         this.checkpointX = 0;
         this.currentPowerUp = null;
         this.powerUpTimer = null;
+    }
+
+    preload() {
+        // Générer tous les sprites des personnages
+        if (!this.textures.exists('sonic')) {
+            CharacterSprites.generateAllSprites(this);
+        }
     }
 
     create() {
@@ -209,14 +217,9 @@ export default class GameScene extends Phaser.Scene {
         const { height } = this.game.config;
         const charData = GameConfig.characters.find(c => c.id === window.gameState.character);
 
-        // Créer le joueur à partir du checkpoint
-        this.player = this.physics.add.sprite(this.checkpointX + 100, height - 200, null);
-
-        // Représentation visuelle du personnage (cercle coloré)
-        const circle = this.add.circle(0, 0, 25, charData.color);
-        const eyes = this.add.text(0, -5, '👀', { fontSize: '20px' }).setOrigin(0.5);
-
-        this.playerGraphics = this.add.container(this.player.x, this.player.y, [circle, eyes]);
+        // Créer le joueur avec le sprite personnalisé
+        this.player = this.physics.add.sprite(this.checkpointX + 100, height - 200, charData.id);
+        this.player.setScale(0.8); // Ajuster la taille pour le gameplay
 
         // Physique
         this.player.setCollideWorldBounds(true);
@@ -229,6 +232,7 @@ export default class GameScene extends Phaser.Scene {
         this.player.canDoubleJump = true;
         this.player.isInvincible = false;
         this.player.hasShield = false;
+        this.player.characterId = charData.id;
 
         // Collisions
         this.physics.add.collider(this.player, this.platforms);
@@ -443,11 +447,6 @@ export default class GameScene extends Phaser.Scene {
     update() {
         if (!this.player || !this.player.active) return;
 
-        // Mettre à jour la position du conteneur graphique du joueur
-        if (this.playerGraphics) {
-            this.playerGraphics.setPosition(this.player.x, this.player.y);
-        }
-
         // Mettre à jour les ennemis
         this.updateEnemies();
 
@@ -456,16 +455,21 @@ export default class GameScene extends Phaser.Scene {
 
         if (this.cursors.left.isDown || this.touchLeft) {
             this.player.setVelocityX(-this.player.speed);
-            if (this.playerGraphics) {
-                this.playerGraphics.list[0].setScale(-1, 1); // Flip horizontal
-            }
+            this.player.setFlipX(true); // Flip horizontal vers la gauche
         } else if (this.cursors.right.isDown || this.touchRight) {
             this.player.setVelocityX(this.player.speed);
-            if (this.playerGraphics) {
-                this.playerGraphics.list[0].setScale(1, 1);
-            }
+            this.player.setFlipX(false); // Direction normale (droite)
         } else {
             this.player.setVelocityX(0);
+        }
+
+        // Animation de saut (léger squash/stretch)
+        if (!onGround && this.player.body.velocity.y < 0) {
+            this.player.setScale(0.8, 0.85); // Stretch vers le haut
+        } else if (!onGround && this.player.body.velocity.y > 0) {
+            this.player.setScale(0.8, 0.75); // Squash en tombant
+        } else {
+            this.player.setScale(0.8, 0.8); // Taille normale
         }
 
         // Saut (clavier)
@@ -502,15 +506,27 @@ export default class GameScene extends Phaser.Scene {
 
     attack() {
         // Animation d'attaque simple
-        if (this.playerGraphics) {
-            this.tweens.add({
-                targets: this.playerGraphics,
-                scaleX: 1.3,
-                scaleY: 1.3,
-                duration: 100,
-                yoyo: true
-            });
-        }
+        this.tweens.add({
+            targets: this.player,
+            scaleX: 1.0,
+            scaleY: 1.0,
+            duration: 100,
+            yoyo: true,
+            onComplete: () => {
+                this.player.setScale(0.8);
+            }
+        });
+
+        // Effet visuel d'attaque
+        const attackCircle = this.add.circle(this.player.x, this.player.y, 50, 0xFFFFFF, 0.5);
+        this.tweens.add({
+            targets: attackCircle,
+            scaleX: 2,
+            scaleY: 2,
+            alpha: 0,
+            duration: 200,
+            onComplete: () => attackCircle.destroy()
+        });
 
         // Vérifier si des ennemis sont à proximité
         this.enemies.children.entries.forEach(enemy => {
@@ -597,24 +613,43 @@ export default class GameScene extends Phaser.Scene {
         // Effets spéciaux
         if (type === 'star') {
             this.player.isInvincible = true;
+            // Effet lumineux autour du joueur
+            this.player.setTint(0xFFFF00);
         } else if (type === 'shield') {
             this.player.hasShield = true;
+            // Effet bleu pour le bouclier
+            this.player.setTint(0x00AAFF);
         } else if (type === 'mushroom') {
-            if (this.playerGraphics) {
-                this.playerGraphics.setScale(1.5);
-            }
+            // Grandir!
+            this.tweens.add({
+                targets: this.player,
+                scaleX: 1.2,
+                scaleY: 1.2,
+                duration: 300
+            });
         } else if (type === 'magnet') {
             this.startMagnetEffect();
+            // Effet magnétique violet
+            this.player.setTint(0xFF00FF);
         }
     }
 
     deactivatePowerUp() {
         if (this.currentPowerUp === 'star') {
             this.player.isInvincible = false;
+            this.player.clearTint();
         } else if (this.currentPowerUp === 'mushroom') {
-            if (this.playerGraphics) {
-                this.playerGraphics.setScale(1);
-            }
+            // Revenir à la taille normale
+            this.tweens.add({
+                targets: this.player,
+                scaleX: 0.8,
+                scaleY: 0.8,
+                duration: 300
+            });
+        } else if (this.currentPowerUp === 'shield') {
+            this.player.clearTint();
+        } else if (this.currentPowerUp === 'magnet') {
+            this.player.clearTint();
         }
 
         this.currentPowerUp = null;
@@ -685,19 +720,17 @@ export default class GameScene extends Phaser.Scene {
         this.player.setVelocity(0, 0);
         this.player.setActive(false);
 
-        if (this.playerGraphics) {
-            this.tweens.add({
-                targets: this.playerGraphics,
-                alpha: 0,
-                y: this.playerGraphics.y - 100,
-                duration: 500,
-                onComplete: () => {
-                    this.respawn();
-                }
-            });
-        } else {
-            this.time.delayedCall(500, () => this.respawn());
-        }
+        // Animation de mort (fade out et élévation)
+        this.tweens.add({
+            targets: this.player,
+            alpha: 0,
+            y: this.player.y - 100,
+            angle: 360,
+            duration: 500,
+            onComplete: () => {
+                this.respawn();
+            }
+        });
     }
 
     respawn() {
@@ -712,17 +745,27 @@ export default class GameScene extends Phaser.Scene {
             this.player.setPosition(this.checkpointX + 100, this.game.config.height - 200);
             this.player.setActive(true);
             this.player.setAlpha(1);
-
-            if (this.playerGraphics) {
-                this.playerGraphics.setPosition(this.player.x, this.player.y);
-                this.playerGraphics.setAlpha(1);
-            }
+            this.player.setAngle(0);
+            this.player.setScale(0.8);
 
             const uiScene = this.scene.get('UIScene');
             uiScene.events.emit('updateLives', lives);
 
-            // Invincibilité temporaire
+            // Invincibilité temporaire avec effet clignotant
             this.player.isInvincible = true;
+
+            // Effet clignotant
+            this.tweens.add({
+                targets: this.player,
+                alpha: 0.3,
+                duration: 200,
+                yoyo: true,
+                repeat: 8,
+                onComplete: () => {
+                    this.player.setAlpha(1);
+                }
+            });
+
             this.time.delayedCall(2000, () => {
                 this.player.isInvincible = false;
             });
