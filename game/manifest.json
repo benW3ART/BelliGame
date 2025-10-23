@@ -1,0 +1,22 @@
+{
+  "name": "Une aventure créée par Papa, Elon et Andy",
+  "short_name": "Aventure PEA",
+  "description": "Un jeu de plateforme 2D pour Elon et Andy",
+  "start_url": "./index.html",
+  "display": "fullscreen",
+  "orientation": "any",
+  "theme_color": "#2196F3",
+  "background_color": "#667eea",
+  "icons": [
+    {
+      "src": "assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
