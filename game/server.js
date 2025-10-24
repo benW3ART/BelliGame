@@ -12,6 +12,22 @@ const PORT = process.env.PORT || 3000;
 // Enable gzip compression
 app.use(compression());
 
+// Set CSP headers to allow Phaser to work
+app.use((req, res, next) => {
+    // Phaser needs unsafe-eval for its internal workings
+    res.setHeader(
+        'Content-Security-Policy',
+        "default-src 'self'; " +
+        "script-src 'self' 'unsafe-eval' https://cdn.jsdelivr.net; " +
+        "style-src 'self' 'unsafe-inline'; " +
+        "img-src 'self' data: blob:; " +
+        "font-src 'self' data:; " +
+        "connect-src 'self'; " +
+        "worker-src 'self' blob:;"
+    );
+    next();
+});
+
 // Serve static files from current directory
 app.use(express.static(__dirname, {
     maxAge: '1d',
