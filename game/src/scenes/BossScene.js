@@ -9,9 +9,19 @@ export default class BossScene extends Phaser.Scene {
     }
 
     init(data) {
-        this.currentLevelData = data; // Store for restart functionality
-        this.levelNum = data.level;
-        this.world = data.world;
+        // Validate input data
+        if (!data || !data.level || !data.world) {
+            console.error('BossScene initialized with invalid data:', data);
+            // Use safe defaults (first boss level)
+            this.currentLevelData = { level: 4, world: GameConfig.worlds[0] };
+            this.levelNum = 4;
+            this.world = GameConfig.worlds[0];
+        } else {
+            this.currentLevelData = data; // Store for restart functionality
+            this.levelNum = data.level;
+            this.world = data.world;
+        }
+
         this.bossData = this.getBossData();
         this.bossHealth = 100;
         this.bossMaxHealth = 100;
@@ -518,6 +528,12 @@ export default class BossScene extends Phaser.Scene {
         this.player.setActive(false);
         this.bossActive = false;
 
+        // Clean up boss attack timer
+        if (this.bossAttackTimer) {
+            this.bossAttackTimer.remove();
+            this.bossAttackTimer = null;
+        }
+
         this.scene.stop('UIScene');
         this.scene.start('GameOverScene', { levelData: { level: this.levelNum, world: this.world } });
     }
@@ -601,5 +617,39 @@ export default class BossScene extends Phaser.Scene {
                 worlds: GameConfig.worlds
             });
         });
+    }
+
+    shutdown() {
+        // Clean up all resources when scene stops
+
+        // Clear boss attack timer
+        if (this.bossAttackTimer) {
+            this.bossAttackTimer.remove();
+            this.bossAttackTimer = null;
+        }
+
+        // Clear all projectiles
+        if (this.playerProjectiles) {
+            this.playerProjectiles.children.entries.forEach(proj => {
+                if (proj.graphic) {
+                    proj.graphic.destroy();
+                }
+            });
+            this.playerProjectiles.clear(true, true);
+        }
+
+        if (this.bossProjectiles) {
+            this.bossProjectiles.children.entries.forEach(proj => {
+                if (proj.graphic) {
+                    proj.graphic.destroy();
+                }
+            });
+            this.bossProjectiles.clear(true, true);
+        }
+
+        // Reset state
+        this.bossActive = false;
+        this.touchLeft = false;
+        this.touchRight = false;
     }
 }

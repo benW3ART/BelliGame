@@ -87,6 +87,15 @@ export default class VictoryScene extends Phaser.Scene {
             this.createButton(width / 2, btnY, '➡️ NIVEAU SUIVANT', 0x4CAF50, () => {
                 // Débloquer le niveau suivant
                 const nextLevel = data.levelNum + 1;
+
+                // Check if next level exists
+                if (nextLevel > 20) {
+                    // No more levels, go back to menu
+                    console.warn('Tried to go beyond level 20');
+                    this.scene.start('MenuScene');
+                    return;
+                }
+
                 window.gameState.unlockLevel(nextLevel);
                 window.gameState.currentLevel = nextLevel;
                 window.gameState.saveState();
@@ -94,10 +103,17 @@ export default class VictoryScene extends Phaser.Scene {
                 // Vérifier si c'est un nouveau monde
                 const nextWorld = data.worlds.find(w => w.levels.includes(nextLevel));
 
-                // Vérifier si c'est un niveau de boss
-                const isBossLevel = nextWorld && nextWorld.levels[nextWorld.levels.length - 1] === nextLevel;
+                // Safety check: if no world found, go to map
+                if (!nextWorld) {
+                    console.warn(`No world found for level ${nextLevel}`);
+                    this.scene.start('MapScene');
+                    return;
+                }
 
-                if (nextWorld && nextWorld.levels[0] === nextLevel && nextWorld.id > 1) {
+                // Vérifier si c'est un niveau de boss
+                const isBossLevel = nextWorld.levels[nextWorld.levels.length - 1] === nextLevel;
+
+                if (nextWorld.levels[0] === nextLevel && nextWorld.id > 1) {
                     // Premier niveau d'un nouveau monde -> montrer BD
                     this.scene.start('ComicScene', { worldId: nextWorld.id, levelNum: nextLevel });
                 } else if (isBossLevel) {

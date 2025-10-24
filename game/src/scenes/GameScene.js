@@ -10,9 +10,19 @@ export default class GameScene extends Phaser.Scene {
     }
 
     init(data) {
-        this.currentLevelData = data;
-        this.levelNum = data.level;
-        this.world = data.world;
+        // Validate input data
+        if (!data || !data.level || !data.world) {
+            console.error('GameScene initialized with invalid data:', data);
+            // Use safe defaults
+            this.currentLevelData = { level: 1, world: GameConfig.worlds[0] };
+            this.levelNum = 1;
+            this.world = GameConfig.worlds[0];
+        } else {
+            this.currentLevelData = data;
+            this.levelNum = data.level;
+            this.world = data.world;
+        }
+
         this.levelScore = 0;
         this.levelCoins = 0;
         this.enemiesKilled = 0;
@@ -969,12 +979,24 @@ export default class GameScene extends Phaser.Scene {
             this.scene.stop('UIScene');
             this.scene.start('GameOverScene', { levelData: this.currentLevelData });
         } else {
+            // Clear any active power-ups before respawn
+            if (this.currentPowerUp) {
+                this.deactivatePowerUp();
+            }
+
             // Respawn au checkpoint
             this.player.setPosition(this.checkpointX + 100, this.game.config.height - 200);
             this.player.setActive(true);
             this.player.setAlpha(1);
             this.player.setAngle(0);
             this.player.setScale(0.8);
+
+            // Reset all player flags
+            this.player.isInvincible = false;
+            this.player.hasShield = false;
+            this.player.hasFireball = false;
+            this.player.hasLaser = false;
+            this.player.clearTint();
 
             // Reset touch controls
             this.touchLeft = false;
@@ -1068,5 +1090,36 @@ export default class GameScene extends Phaser.Scene {
                 worlds: GameConfig.worlds
             });
         });
+    }
+
+    shutdown() {
+        // Clean up all resources when scene stops
+
+        // Clear power-up timer
+        if (this.powerUpTimer) {
+            this.powerUpTimer.remove();
+            this.powerUpTimer = null;
+        }
+
+        // Clear magnet interval
+        if (this.magnetInterval) {
+            this.magnetInterval.remove();
+            this.magnetInterval = null;
+        }
+
+        // Clear all projectiles
+        if (this.projectiles) {
+            this.projectiles.children.entries.forEach(proj => {
+                if (proj.graphic) {
+                    proj.graphic.destroy();
+                }
+            });
+            this.projectiles.clear(true, true);
+        }
+
+        // Reset state
+        this.currentPowerUp = null;
+        this.touchLeft = false;
+        this.touchRight = false;
     }
 }
