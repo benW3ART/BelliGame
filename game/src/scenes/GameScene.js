@@ -20,6 +20,7 @@ export default class GameScene extends Phaser.Scene {
         this.currentPowerUp = null;
         this.powerUpTimer = null;
         this.isBossLevel = false;
+        this.projectiles = null; // Player projectiles for fireball/laser
     }
 
     preload() {
@@ -58,6 +59,12 @@ export default class GameScene extends Phaser.Scene {
 
         // Créer les items
         this.createItems();
+
+        // Créer le groupe de projectiles
+        this.projectiles = this.physics.add.group();
+
+        // Collisions projectiles-ennemis
+        this.physics.add.overlap(this.projectiles, this.enemies, this.projectileHitEnemy, null, this);
 
         // Contrôles
         this.setupControls();
@@ -245,6 +252,8 @@ export default class GameScene extends Phaser.Scene {
         this.player.canDoubleJump = true;
         this.player.isInvincible = false;
         this.player.hasShield = false;
+        this.player.hasFireball = false;
+        this.player.hasLaser = false;
         this.player.characterId = charData.id;
 
         // Collisions
@@ -277,6 +286,7 @@ export default class GameScene extends Phaser.Scene {
             // IA basique: patrouille
             enemy.direction = Math.random() < 0.5 ? -1 : 1;
             enemy.speed = 50 + Math.random() * 50;
+            enemy.normalSpeed = enemy.speed; // Store for clock power-up
             enemy.enemyType = enemyType;
 
             this.enemies.add(enemy);
@@ -489,6 +499,15 @@ export default class GameScene extends Phaser.Scene {
         // Mettre à jour les ennemis
         this.updateEnemies();
 
+        // Mettre à jour les positions graphiques des projectiles
+        if (this.projectiles) {
+            this.projectiles.children.entries.forEach(proj => {
+                if (proj.graphic && proj.active) {
+                    proj.graphic.setPosition(proj.x, proj.y);
+                }
+            });
+        }
+
         // Déplacements
         const onGround = this.player.body.touching.down;
 
@@ -544,7 +563,16 @@ export default class GameScene extends Phaser.Scene {
     }
 
     attack() {
-        // Animation d'attaque simple
+        // Shoot projectile if has fireball or laser
+        if (this.player.hasFireball) {
+            this.shootProjectile('fireball');
+            return;
+        } else if (this.player.hasLaser) {
+            this.shootProjectile('laser');
+            return;
+        }
+
+        // Animation d'attaque simple (melee)
         this.tweens.add({
             targets: this.player,
             scaleX: 1.0,
@@ -574,6 +602,55 @@ export default class GameScene extends Phaser.Scene {
                 this.killEnemy(enemy);
             }
         });
+    }
+
+    shootProjectile(type) {
+        if (!this.player.active) return;
+
+        // Create projectile sprite
+        const offsetX = this.player.flipX ? -30 : 30;
+        const projectile = this.physics.add.sprite(this.player.x + offsetX, this.player.y, null);
+
+        // Visual appearance based on type
+        let color, speed, size;
+        if (type === 'fireball') {
+            color = 0xFF4500; // Orange-red
+            speed = 400;
+            size = 12;
+        } else if (type === 'laser') {
+            color = 0x00FFFF; // Cyan
+            speed = 600;
+            size = 8;
+        }
+
+        const graphic = this.add.circle(projectile.x, projectile.y, size, color);
+        projectile.graphic = graphic;
+
+        // Set velocity
+        projectile.setVelocityX(this.player.flipX ? -speed : speed);
+        projectile.setSize(size * 2, size * 2);
+        projectile.projectileType = type;
+
+        this.projectiles.add(projectile);
+
+        // Destroy after 2 seconds or when off-screen
+        this.time.delayedCall(2000, () => {
+            if (projectile.active) {
+                if (projectile.graphic) projectile.graphic.destroy();
+                projectile.destroy();
+            }
+        });
+    }
+
+    projectileHitEnemy(projectile, enemy) {
+        // Destroy projectile
+        if (projectile.graphic) {
+            projectile.graphic.destroy();
+        }
+        projectile.destroy();
+
+        // Kill enemy
+        this.killEnemy(enemy);
     }
 
     updateEnemies() {
@@ -652,6 +729,11 @@ export default class GameScene extends Phaser.Scene {
             onComplete: () => powerUp.destroy()
         });
 
+        // Deactivate current power-up before activating new one
+        if (this.currentPowerUp) {
+            this.deactivatePowerUp();
+        }
+
         this.activatePowerUp(powerType);
     }
 
@@ -697,6 +779,18 @@ export default class GameScene extends Phaser.Scene {
             this.startMagnetEffect();
             // Effet magnétique violet
             this.player.setTint(0xFF00FF);
+        } else if (type === 'fireball') {
+            this.player.hasFireball = true;
+            // Effet rouge/orange
+            this.player.setTint(0xFF4500);
+        } else if (type === 'laser') {
+            this.player.hasLaser = true;
+            // Effet cyan électrique
+            this.player.setTint(0x00FFFF);
+        } else if (type === 'clock') {
+            this.startClockEffect();
+            // Effet doré pour le temps ralenti
+            this.player.setTint(0xFFD700);
         }
     }
 
@@ -713,6 +807,7 @@ export default class GameScene extends Phaser.Scene {
                 duration: 300
             });
         } else if (this.currentPowerUp === 'shield') {
+            this.player.hasShield = false;
             this.player.clearTint();
         } else if (this.currentPowerUp === 'magnet') {
             this.player.clearTint();
@@ -720,6 +815,22 @@ export default class GameScene extends Phaser.Scene {
             if (this.magnetInterval) {
                 this.magnetInterval.remove();
                 this.magnetInterval = null;
+            }
+        } else if (this.currentPowerUp === 'fireball') {
+            this.player.hasFireball = false;
+            this.player.clearTint();
+        } else if (this.currentPowerUp === 'laser') {
+            this.player.hasLaser = false;
+            this.player.clearTint();
+        } else if (this.currentPowerUp === 'clock') {
+            this.player.clearTint();
+            // Reset enemy speeds
+            if (this.enemies) {
+                this.enemies.children.entries.forEach(enemy => {
+                    if (enemy.normalSpeed) {
+                        enemy.speed = enemy.normalSpeed;
+                    }
+                });
             }
         }
 
@@ -750,6 +861,15 @@ export default class GameScene extends Phaser.Scene {
                 this.magnetInterval.remove();
             }
         });
+    }
+
+    startClockEffect() {
+        // Ralentir tous les ennemis à 30% de leur vitesse normale
+        if (this.enemies) {
+            this.enemies.children.entries.forEach(enemy => {
+                enemy.speed = enemy.normalSpeed * 0.3;
+            });
+        }
     }
 
     hitEnemy(player, enemy) {

@@ -6,6 +6,13 @@ export default class GameOverScene extends Phaser.Scene {
     create(data) {
         const { width, height } = this.game.config;
 
+        // Detect which scene we came from
+        this.isBossLevel = false;
+        if (data.levelData && data.levelData.world && data.levelData.level) {
+            const world = data.levelData.world;
+            this.isBossLevel = world.levels[world.levels.length - 1] === data.levelData.level;
+        }
+
         // Background sombre
         this.add.rectangle(0, 0, width, height, 0x000000, 0.9).setOrigin(0);
 
@@ -59,7 +66,12 @@ export default class GameOverScene extends Phaser.Scene {
             window.gameState.lives = 3;
             window.gameState.saveState();
 
-            this.scene.start('GameScene', data.levelData);
+            // Restart appropriate scene
+            if (this.isBossLevel) {
+                this.scene.start('BossScene', data.levelData);
+            } else {
+                this.scene.start('GameScene', data.levelData);
+            }
         });
 
         // Carte du monde
