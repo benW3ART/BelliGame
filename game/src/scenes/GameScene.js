@@ -32,6 +32,7 @@ export default class GameScene extends Phaser.Scene {
         this.projectiles = null; // Player projectiles for fireball/laser
         this.playerDying = false;
         this.levelCompleted = false;
+        this.invincibilityTimer = null;
     }
 
     preload() {
@@ -171,7 +172,6 @@ export default class GameScene extends Phaser.Scene {
             const y = height - 300;
 
             const platform = this.physics.add.image(x, y, null);
-            const rect = this.add.rectangle(0, 0, 150, 20, 0x654321);
             platform.setSize(150, 20);
 
             // Animation de mouvement
@@ -1031,6 +1031,11 @@ export default class GameScene extends Phaser.Scene {
             // Invincibilité temporaire avec effet clignotant
             this.player.isInvincible = true;
 
+            // Clear any existing invincibility timer
+            if (this.invincibilityTimer) {
+                this.invincibilityTimer.remove();
+            }
+
             // Effet clignotant
             this.tweens.add({
                 targets: this.player,
@@ -1039,12 +1044,16 @@ export default class GameScene extends Phaser.Scene {
                 yoyo: true,
                 repeat: 8,
                 onComplete: () => {
-                    this.player.setAlpha(1);
+                    if (this.player && this.player.active) {
+                        this.player.setAlpha(1);
+                    }
                 }
             });
 
-            this.time.delayedCall(2000, () => {
-                this.player.isInvincible = false;
+            this.invincibilityTimer = this.time.delayedCall(2000, () => {
+                if (this.player && this.player.active) {
+                    this.player.isInvincible = false;
+                }
             });
         }
     }
@@ -1126,6 +1135,12 @@ export default class GameScene extends Phaser.Scene {
         if (this.magnetInterval) {
             this.magnetInterval.remove();
             this.magnetInterval = null;
+        }
+
+        // Clear invincibility timer
+        if (this.invincibilityTimer) {
+            this.invincibilityTimer.remove();
+            this.invincibilityTimer = null;
         }
 
         // Clear all projectiles

@@ -176,7 +176,8 @@ export class GameState {
 
     addCoins(amount) {
         this.coins += amount;
-        this.addScore(amount * GameConfig.gameplay.coinValue);
+        // Update score without saving (addScore will save)
+        this.score += amount * GameConfig.gameplay.coinValue;
         this.saveState();
     }
 

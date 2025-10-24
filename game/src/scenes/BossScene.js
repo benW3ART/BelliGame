@@ -30,6 +30,7 @@ export default class BossScene extends Phaser.Scene {
         this.playerHits = 0;
         this.bossDefeatedFlag = false;
         this.playerDying = false;
+        this.invincibilityTimer = null;
     }
 
     preload() {
@@ -511,6 +512,12 @@ export default class BossScene extends Phaser.Scene {
         } else {
             // Invincibilité temporaire
             this.player.isInvincible = true;
+
+            // Clear any existing invincibility timer
+            if (this.invincibilityTimer) {
+                this.invincibilityTimer.remove();
+            }
+
             this.tweens.add({
                 targets: this.player,
                 alpha: 0.3,
@@ -519,9 +526,11 @@ export default class BossScene extends Phaser.Scene {
                 repeat: 5
             });
 
-            this.time.delayedCall(1500, () => {
-                this.player.isInvincible = false;
-                this.player.setAlpha(1);
+            this.invincibilityTimer = this.time.delayedCall(1500, () => {
+                if (this.player && this.player.active) {
+                    this.player.isInvincible = false;
+                    this.player.setAlpha(1);
+                }
             });
         }
     }
@@ -636,6 +645,12 @@ export default class BossScene extends Phaser.Scene {
         if (this.bossAttackTimer) {
             this.bossAttackTimer.remove();
             this.bossAttackTimer = null;
+        }
+
+        // Clear invincibility timer
+        if (this.invincibilityTimer) {
+            this.invincibilityTimer.remove();
+            this.invincibilityTimer = null;
         }
 
         // Clear all projectiles
