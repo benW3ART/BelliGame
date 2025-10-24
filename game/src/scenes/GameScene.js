@@ -35,6 +35,8 @@ export default class GameScene extends Phaser.Scene {
         this.invincibilityTimer = null;
         this.touchLeft = false;
         this.touchRight = false;
+        this.sessionScore = 0;
+        this.sessionCoins = 0;
     }
 
     preload() {
@@ -89,10 +91,6 @@ export default class GameScene extends Phaser.Scene {
 
         // Physique
         this.physics.world.setBounds(0, 0, width * 3, height);
-
-        // Compteurs de session
-        this.sessionScore = 0;
-        this.sessionCoins = 0;
     }
 
     createLevel() {
