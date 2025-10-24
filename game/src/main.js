@@ -4,6 +4,7 @@ import CharacterSelectScene from './scenes/CharacterSelectScene.js';
 import MapScene from './scenes/MapScene.js';
 import UIScene from './scenes/UIScene.js';
 import GameScene from './scenes/GameScene.js';
+import BossScene from './scenes/BossScene.js';
 import PauseScene from './scenes/PauseScene.js';
 import GameOverScene from './scenes/GameOverScene.js';
 import VictoryScene from './scenes/VictoryScene.js';
@@ -37,6 +38,7 @@ const config = {
         CharacterSelectScene,
         MapScene,
         GameScene,
+        BossScene,
         UIScene,
         PauseScene,
         GameOverScene,

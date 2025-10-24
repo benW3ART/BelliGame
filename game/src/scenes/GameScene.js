@@ -1,5 +1,8 @@
 import { GameConfig } from '../config.js';
 import { CharacterSprites } from '../CharacterSprites.js';
+import { EnemySprites } from '../EnemySprites.js';
+import { ItemSprites } from '../ItemSprites.js';
+import { BossSprites } from '../BossSprites.js';
 
 export default class GameScene extends Phaser.Scene {
     constructor() {
@@ -16,12 +19,22 @@ export default class GameScene extends Phaser.Scene {
         this.checkpointX = 0;
         this.currentPowerUp = null;
         this.powerUpTimer = null;
+        this.isBossLevel = false;
     }
 
     preload() {
-        // Générer tous les sprites des personnages
+        // Générer tous les sprites si pas déjà fait
         if (!this.textures.exists('sonic')) {
             CharacterSprites.generateAllSprites(this);
+        }
+        if (!this.textures.exists('enemy_mole')) {
+            EnemySprites.generateAllEnemySprites(this);
+        }
+        if (!this.textures.exists('item_coin')) {
+            ItemSprites.generateAllItemSprites(this);
+        }
+        if (!this.textures.exists('boss_grumf')) {
+            BossSprites.generateAllBossSprites(this);
         }
     }
 
@@ -247,28 +260,24 @@ export default class GameScene extends Phaser.Scene {
         const { width, height } = this.game.config;
         const enemyCount = 5 + Math.floor(this.levelNum / 3);
 
+        // Sélectionner les types d'ennemis selon le monde
+        const enemyTypes = this.getEnemyTypesForWorld();
+
         for (let i = 0; i < enemyCount; i++) {
             const x = Phaser.Math.Between(400, width * 2.5);
             const y = height - 200;
 
-            const enemy = this.physics.add.sprite(x, y, null);
+            // Choisir un type d'ennemi aléatoire pour ce monde
+            const enemyType = Phaser.Utils.Array.GetRandom(enemyTypes);
+
+            const enemy = this.physics.add.sprite(x, y, enemyType);
+            enemy.setScale(0.7); // Ajuster la taille
             enemy.setSize(40, 40);
-
-            // Représentation visuelle
-            const enemyColor = this.world.theme === 'forest' ? 0x8B4513 :
-                             this.world.theme === 'desert' ? 0xFFD700 :
-                             this.world.theme === 'ocean' ? 0x1E90FF :
-                             this.world.theme === 'ice' ? 0x87CEEB :
-                             this.world.theme === 'city' ? 0x696969 : 0x8B008B;
-
-            const enemyCircle = this.add.circle(x, y, 20, enemyColor);
-            const enemyFace = this.add.text(x, y, '😈', { fontSize: '24px' }).setOrigin(0.5);
-
-            enemy.graphics = this.add.container(0, 0, [enemyCircle, enemyFace]);
 
             // IA basique: patrouille
             enemy.direction = Math.random() < 0.5 ? -1 : 1;
             enemy.speed = 50 + Math.random() * 50;
+            enemy.enemyType = enemyType;
 
             this.enemies.add(enemy);
         }
@@ -283,26 +292,40 @@ export default class GameScene extends Phaser.Scene {
         this.physics.add.overlap(this.player, this.enemies, this.hitEnemy, null, this);
     }
 
+    getEnemyTypesForWorld() {
+        const enemyMap = {
+            forest: ['enemy_mole', 'enemy_bird'],
+            desert: ['enemy_beetle', 'enemy_snake'],
+            ocean: ['enemy_fish', 'enemy_crab', 'enemy_jellyfish'],
+            ice: ['enemy_penguin', 'enemy_stalactite'],
+            city: ['enemy_robot', 'enemy_drone'],
+            castle: ['enemy_guardian', 'enemy_knight']
+        };
+
+        return enemyMap[this.world.theme] || ['enemy_mole'];
+    }
+
     createItems() {
         this.coins = this.physics.add.group();
         this.powerUps = this.physics.add.group();
 
         const { width, height } = this.game.config;
 
-        // Pièces
+        // Pièces avec sprites
         for (let i = 0; i < 30; i++) {
             const x = Phaser.Math.Between(100, width * 2.8);
             const y = Phaser.Math.Between(100, height - 200);
 
-            const coin = this.physics.add.sprite(x, y, null);
+            const coin = this.physics.add.sprite(x, y, 'item_coin');
+            coin.setScale(0.8);
             coin.setSize(30, 30);
-            const coinGraphic = this.add.text(x, y, '💰', { fontSize: '30px' }).setOrigin(0.5);
 
-            // Animation
+            // Animation de rotation et rebond
             this.tweens.add({
-                targets: coinGraphic,
+                targets: coin,
                 y: y - 10,
-                duration: 1000,
+                angle: 360,
+                duration: 2000,
                 yoyo: true,
                 repeat: -1
             });
@@ -310,31 +333,24 @@ export default class GameScene extends Phaser.Scene {
             this.coins.add(coin);
         }
 
-        // Power-ups (plus rares)
+        // Power-ups avec sprites (plus rares)
         for (let i = 0; i < 5; i++) {
             const x = Phaser.Math.Between(400, width * 2.5);
             const y = Phaser.Math.Between(100, height - 200);
 
-            const powerUp = this.physics.add.sprite(x, y, null);
+            const powerUpTypes = ['mushroom', 'star', 'fireball', 'shield', 'magnet', 'laser', 'clock'];
+            const powerType = Phaser.Utils.Array.GetRandom(powerUpTypes);
+
+            const powerUp = this.physics.add.sprite(x, y, 'item_' + powerType);
+            powerUp.setScale(0.8);
             powerUp.setSize(40, 40);
+            powerUp.powerType = powerType;
 
-            const powerUpTypes = ['mushroom', 'star', 'fireball', 'shield', 'magnet'];
-            powerUp.powerType = Phaser.Utils.Array.GetRandom(powerUpTypes);
-
-            const icons = {
-                mushroom: '🍄',
-                star: '⭐',
-                fireball: '🔥',
-                shield: '🛡️',
-                magnet: '🧲'
-            };
-
-            const powerUpGraphic = this.add.text(x, y, icons[powerUp.powerType], { fontSize: '35px' }).setOrigin(0.5);
-
+            // Animation de pulsation
             this.tweens.add({
-                targets: powerUpGraphic,
-                scaleX: 1.2,
-                scaleY: 1.2,
+                targets: powerUp,
+                scaleX: 0.9,
+                scaleY: 0.9,
                 duration: 800,
                 yoyo: true,
                 repeat: -1
@@ -343,41 +359,64 @@ export default class GameScene extends Phaser.Scene {
             this.powerUps.add(powerUp);
         }
 
+        // Ajouter quelques vies bonus (cœurs) - rares
+        for (let i = 0; i < 2; i++) {
+            const x = Phaser.Math.Between(600, width * 2);
+            const y = Phaser.Math.Between(100, height - 250);
+
+            const heart = this.physics.add.sprite(x, y, 'item_heart');
+            heart.setScale(0.7);
+            heart.setSize(30, 30);
+            heart.isHeart = true;
+
+            this.tweens.add({
+                targets: heart,
+                y: y - 15,
+                duration: 1200,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
+
+            this.powerUps.add(heart);
+        }
+
         // Collisions
         this.physics.add.overlap(this.player, this.coins, this.collectCoin, null, this);
         this.physics.add.overlap(this.player, this.powerUps, this.collectPowerUp, null, this);
     }
 
     createCheckpoint(x, y) {
-        this.checkpoint = this.physics.add.sprite(x, y, null);
+        this.checkpoint = this.physics.add.sprite(x, y, 'item_checkpoint');
         this.checkpoint.setSize(60, 100);
+        this.checkpoint.setScale(0.8);
 
-        const flag = this.add.text(x, y, '🚩', { fontSize: '60px' }).setOrigin(0.5);
-
+        // Animation du drapeau qui flotte
         this.tweens.add({
-            targets: flag,
-            x: x + 10,
+            targets: this.checkpoint,
+            x: x + 5,
             duration: 1000,
             yoyo: true,
-            repeat: -1
+            repeat: -1,
+            ease: 'Sine.easeInOut'
         });
 
         this.physics.add.overlap(this.player, this.checkpoint, this.reachedCheckpoint, null, this);
     }
 
     createFinishLine(x, y) {
-        this.finishLine = this.physics.add.sprite(x, y, null);
+        this.finishLine = this.physics.add.sprite(x, y, 'item_finish');
         this.finishLine.setSize(80, 120);
 
-        const finish = this.add.text(x, y, '🏁', { fontSize: '80px' }).setOrigin(0.5);
-
+        // Animation d'agitation
         this.tweens.add({
-            targets: finish,
-            scaleX: 1.1,
-            scaleY: 1.1,
+            targets: this.finishLine,
+            scaleX: 1.05,
+            scaleY: 1.05,
             duration: 800,
             yoyo: true,
-            repeat: -1
+            repeat: -1,
+            ease: 'Sine.easeInOut'
         });
 
         this.physics.add.overlap(this.player, this.finishLine, this.levelComplete, null, this);
@@ -544,27 +583,30 @@ export default class GameScene extends Phaser.Scene {
             // Mouvement de patrouille
             enemy.setVelocityX(enemy.speed * enemy.direction);
 
+            // Flip le sprite selon la direction
+            if (enemy.direction < 0) {
+                enemy.setFlipX(true);
+            } else {
+                enemy.setFlipX(false);
+            }
+
             // Changer de direction aux bords ou aléatoirement
             if (enemy.x < 50 || enemy.x > this.game.config.width * 3 - 50 || Math.random() < 0.01) {
                 enemy.direction *= -1;
-            }
-
-            // Mettre à jour la position graphique
-            if (enemy.graphics) {
-                enemy.graphics.setPosition(enemy.x, enemy.y);
             }
         });
     }
 
     collectCoin(player, coin) {
-        coin.destroy();
-
-        // Trouver et détruire le graphique de la pièce
-        const coinGraphics = this.children.list.find(c =>
-            c.type === 'Text' && c.text === '💰' &&
-            Math.abs(c.x - coin.x) < 5 && Math.abs(c.y - coin.y) < 10
-        );
-        if (coinGraphics) coinGraphics.destroy();
+        // Effet de collecte
+        this.tweens.add({
+            targets: coin,
+            scaleX: 1.5,
+            scaleY: 1.5,
+            alpha: 0,
+            duration: 200,
+            onComplete: () => coin.destroy()
+        });
 
         this.levelCoins++;
         this.sessionCoins++;
@@ -577,14 +619,38 @@ export default class GameScene extends Phaser.Scene {
     }
 
     collectPowerUp(player, powerUp) {
-        const powerType = powerUp.powerType;
-        powerUp.destroy();
+        // Vérifier si c'est un cœur (vie)
+        if (powerUp.isHeart) {
+            // Effet de collecte
+            this.tweens.add({
+                targets: powerUp,
+                scaleX: 1.5,
+                scaleY: 1.5,
+                alpha: 0,
+                y: powerUp.y - 50,
+                duration: 500,
+                onComplete: () => powerUp.destroy()
+            });
 
-        // Trouver et détruire le graphique
-        const graphic = this.children.list.find(c =>
-            c.type === 'Text' && Math.abs(c.x - powerUp.x) < 5 && Math.abs(c.y - powerUp.y) < 10
-        );
-        if (graphic) graphic.destroy();
+            // Ajouter une vie
+            window.gameState.addLife();
+            const uiScene = this.scene.get('UIScene');
+            uiScene.events.emit('updateLives', window.gameState.lives);
+            return;
+        }
+
+        // Power-up normal
+        const powerType = powerUp.powerType;
+
+        // Effet de collecte
+        this.tweens.add({
+            targets: powerUp,
+            scaleX: 1.3,
+            scaleY: 1.3,
+            alpha: 0,
+            duration: 300,
+            onComplete: () => powerUp.destroy()
+        });
 
         this.activatePowerUp(powerType);
     }
@@ -703,9 +769,29 @@ export default class GameScene extends Phaser.Scene {
     killEnemy(enemy) {
         if (!enemy.active) return;
 
-        enemy.destroy();
-        if (enemy.graphics) {
-            enemy.graphics.destroy();
+        // Effet visuel de mort d'ennemi
+        this.tweens.add({
+            targets: enemy,
+            alpha: 0,
+            scaleX: 0,
+            scaleY: 0,
+            angle: 360,
+            duration: 300,
+            onComplete: () => enemy.destroy()
+        });
+
+        // Particules d'explosion simple
+        for (let i = 0; i < 5; i++) {
+            const particle = this.add.circle(enemy.x, enemy.y, 5, 0xFFFF00);
+            const angle = (Math.PI * 2 * i) / 5;
+            this.tweens.add({
+                targets: particle,
+                x: enemy.x + Math.cos(angle) * 40,
+                y: enemy.y + Math.sin(angle) * 40,
+                alpha: 0,
+                duration: 400,
+                onComplete: () => particle.destroy()
+            });
         }
 
         this.enemiesKilled++;

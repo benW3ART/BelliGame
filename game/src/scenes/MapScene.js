@@ -262,10 +262,17 @@ export default class MapScene extends Phaser.Scene {
     }
 
     startLevel(levelNum, world) {
+        // Vérifier si c'est un niveau de boss
+        const isBossLevel = world.levels[world.levels.length - 1] === levelNum;
+
         // Si c'est le premier niveau d'un monde (sauf le premier monde), montrer la BD
         if (world.levels[0] === levelNum && world.id > 1) {
             this.scene.start('ComicScene', { worldId: world.id, levelNum: levelNum });
+        } else if (isBossLevel) {
+            // Lancer le combat de boss
+            this.scene.start('BossScene', { level: levelNum, world: world });
         } else {
+            // Niveau normal
             this.scene.start('GameScene', { level: levelNum, world: world });
         }
     }
