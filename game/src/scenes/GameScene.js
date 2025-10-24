@@ -621,6 +621,11 @@ export default class GameScene extends Phaser.Scene {
             color = 0x00FFFF; // Cyan
             speed = 600;
             size = 8;
+        } else {
+            // Default for unknown types
+            color = 0xFFFFFF; // White
+            speed = 400;
+            size = 10;
         }
 
         const graphic = this.add.circle(projectile.x, projectile.y, size, color);
@@ -691,8 +696,10 @@ export default class GameScene extends Phaser.Scene {
 
         // Mettre à jour l'UI
         const uiScene = this.scene.get('UIScene');
-        uiScene.events.emit('updateCoins', window.gameState.coins);
-        uiScene.events.emit('updateScore', window.gameState.score);
+        if (uiScene) {
+            uiScene.events.emit('updateCoins', window.gameState.coins);
+            uiScene.events.emit('updateScore', window.gameState.score);
+        }
     }
 
     collectPowerUp(player, powerUp) {
@@ -712,7 +719,9 @@ export default class GameScene extends Phaser.Scene {
             // Ajouter une vie
             window.gameState.addLife();
             const uiScene = this.scene.get('UIScene');
-            uiScene.events.emit('updateLives', window.gameState.lives);
+            if (uiScene) {
+                uiScene.events.emit('updateLives', window.gameState.lives);
+            }
             return;
         }
 
@@ -743,19 +752,21 @@ export default class GameScene extends Phaser.Scene {
         const uiScene = this.scene.get('UIScene');
         const powerUpConfig = GameConfig.powerUps.find(p => p.id === type);
 
-        if (powerUpConfig && powerUpConfig.duration > 0) {
-            uiScene.showPowerUp(type, powerUpConfig.duration);
+        if (uiScene) {
+            if (powerUpConfig && powerUpConfig.duration > 0) {
+                uiScene.showPowerUp(type, powerUpConfig.duration);
 
-            // Timer pour désactiver
-            if (this.powerUpTimer) {
-                this.powerUpTimer.remove();
+                // Timer pour désactiver
+                if (this.powerUpTimer) {
+                    this.powerUpTimer.remove();
+                }
+
+                this.powerUpTimer = this.time.delayedCall(powerUpConfig.duration, () => {
+                    this.deactivatePowerUp();
+                });
+            } else {
+                uiScene.showPowerUp(type, -1);
             }
-
-            this.powerUpTimer = this.time.delayedCall(powerUpConfig.duration, () => {
-                this.deactivatePowerUp();
-            });
-        } else {
-            uiScene.showPowerUp(type, -1);
         }
 
         // Effets spéciaux
@@ -837,7 +848,9 @@ export default class GameScene extends Phaser.Scene {
         this.currentPowerUp = null;
 
         const uiScene = this.scene.get('UIScene');
-        uiScene.removePowerUp();
+        if (uiScene) {
+            uiScene.removePowerUp();
+        }
     }
 
     startMagnetEffect() {
@@ -883,7 +896,9 @@ export default class GameScene extends Phaser.Scene {
             this.player.hasShield = false;
             this.killEnemy(enemy);
             const uiScene = this.scene.get('UIScene');
-            uiScene.removePowerUp();
+            if (uiScene) {
+                uiScene.removePowerUp();
+            }
             return;
         }
 
@@ -923,7 +938,9 @@ export default class GameScene extends Phaser.Scene {
         window.gameState.addScore(GameConfig.gameplay.enemyKillScore);
 
         const uiScene = this.scene.get('UIScene');
-        uiScene.events.emit('updateScore', window.gameState.score);
+        if (uiScene) {
+            uiScene.events.emit('updateScore', window.gameState.score);
+        }
     }
 
     playerDeath() {
@@ -959,8 +976,14 @@ export default class GameScene extends Phaser.Scene {
             this.player.setAngle(0);
             this.player.setScale(0.8);
 
+            // Reset touch controls
+            this.touchLeft = false;
+            this.touchRight = false;
+
             const uiScene = this.scene.get('UIScene');
-            uiScene.events.emit('updateLives', lives);
+            if (uiScene) {
+                uiScene.events.emit('updateLives', lives);
+            }
 
             // Invincibilité temporaire avec effet clignotant
             this.player.isInvincible = true;

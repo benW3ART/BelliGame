@@ -82,6 +82,13 @@ export default class UIScene extends Phaser.Scene {
         this.powerUpContainer = this.add.container(width - 150, height - 100);
     }
 
+    shutdown() {
+        // Clean up event listeners to prevent memory leaks
+        this.events.off('updateScore', this.updateScore, this);
+        this.events.off('updateCoins', this.updateCoins, this);
+        this.events.off('updateLives', this.updateLives, this);
+    }
+
     updateScore(score) {
         this.scoreText.setText(`⭐ ${score}`);
 
@@ -119,11 +126,6 @@ export default class UIScene extends Phaser.Scene {
             duration: 200,
             yoyo: true
         });
-
-        // Flash rouge si perte de vie
-        if (lives < window.gameState.lives) {
-            this.cameras.main.flash(500, 255, 0, 0);
-        }
     }
 
     showPowerUp(powerUpType, duration) {

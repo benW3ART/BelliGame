@@ -24,7 +24,7 @@ export default class MapScene extends Phaser.Scene {
         }).setOrigin(0.5);
 
         // Informations du joueur
-        const charData = GameConfig.characters.find(c => c.id === window.gameState.character);
+        const charData = GameConfig.characters.find(c => c.id === window.gameState.character) || GameConfig.characters[0];
         this.add.text(50, 50, `Héros: ${charData.name}`, {
             fontSize: '24px',
             color: '#ffffff',
@@ -133,6 +133,12 @@ export default class MapScene extends Phaser.Scene {
     }
 
     createLevelNode(x, y, levelNum, world, isUnlocked, isCurrent) {
+        // Safety check: if world is null, skip this level node
+        if (!world) {
+            console.warn(`No world found for level ${levelNum}`);
+            return;
+        }
+
         const node = this.add.container(x, y);
 
         // Cercle du niveau

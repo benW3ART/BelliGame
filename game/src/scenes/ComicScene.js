@@ -9,6 +9,13 @@ export default class ComicScene extends Phaser.Scene {
         const { width, height } = this.game.config;
         const world = GameConfig.worlds.find(w => w.id === data.worldId);
 
+        // Safety check: if world not found, go directly to game
+        if (!world) {
+            console.warn(`No world found for worldId ${data.worldId}, starting GameScene`);
+            this.scene.start('GameScene', { level: data.levelNum, world: GameConfig.worlds[0] });
+            return;
+        }
+
         // Background
         this.add.rectangle(0, 0, width, height, 0x000000).setOrigin(0);
 

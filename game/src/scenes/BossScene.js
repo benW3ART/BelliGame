@@ -490,7 +490,9 @@ export default class BossScene extends Phaser.Scene {
 
         const lives = window.gameState.loseLife();
         const uiScene = this.scene.get('UIScene');
-        uiScene.events.emit('updateLives', lives);
+        if (uiScene) {
+            uiScene.events.emit('updateLives', lives);
+        }
 
         if (lives <= 0) {
             this.playerDeath();
