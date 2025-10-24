@@ -28,6 +28,8 @@ export default class BossScene extends Phaser.Scene {
         this.bossPhase = 1;
         this.bossAttackTimer = 0;
         this.playerHits = 0;
+        this.bossDefeatedFlag = false;
+        this.playerDying = false;
     }
 
     preload() {
@@ -525,6 +527,10 @@ export default class BossScene extends Phaser.Scene {
     }
 
     playerDeath() {
+        // Guard against multiple death triggers
+        if (this.playerDying) return;
+        this.playerDying = true;
+
         this.player.setActive(false);
         this.bossActive = false;
 
@@ -539,6 +545,10 @@ export default class BossScene extends Phaser.Scene {
     }
 
     bossDefeated() {
+        // Guard against multiple calls
+        if (this.bossDefeatedFlag) return;
+        this.bossDefeatedFlag = true;
+
         this.bossActive = false;
 
         if (this.bossAttackTimer) {

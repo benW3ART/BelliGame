@@ -30,6 +30,8 @@ export default class GameScene extends Phaser.Scene {
         this.powerUpTimer = null;
         this.isBossLevel = false;
         this.projectiles = null; // Player projectiles for fireball/laser
+        this.playerDying = false;
+        this.levelCompleted = false;
     }
 
     preload() {
@@ -690,6 +692,13 @@ export default class GameScene extends Phaser.Scene {
     }
 
     collectCoin(player, coin) {
+        // Prevent multiple collection
+        if (coin.collected) return;
+        coin.collected = true;
+
+        // Disable physics immediately
+        coin.body.enable = false;
+
         // Effet de collecte
         this.tweens.add({
             targets: coin,
@@ -713,6 +722,13 @@ export default class GameScene extends Phaser.Scene {
     }
 
     collectPowerUp(player, powerUp) {
+        // Prevent multiple collection
+        if (powerUp.collected) return;
+        powerUp.collected = true;
+
+        // Disable physics immediately
+        powerUp.body.enable = false;
+
         // Vérifier si c'est un cœur (vie)
         if (powerUp.isHeart) {
             // Effet de collecte
@@ -955,6 +971,10 @@ export default class GameScene extends Phaser.Scene {
     }
 
     playerDeath() {
+        // Guard against multiple death triggers
+        if (this.playerDying) return;
+        this.playerDying = true;
+
         // Animation de mort
         this.player.setVelocity(0, 0);
         this.player.setActive(false);
@@ -977,9 +997,12 @@ export default class GameScene extends Phaser.Scene {
 
         if (lives <= 0) {
             // Game over
+            this.playerDying = false; // Reset flag
             this.scene.stop('UIScene');
             this.scene.start('GameOverScene', { levelData: this.currentLevelData });
         } else {
+            // Reset death flag before respawning
+            this.playerDying = false;
             // Clear any active power-ups before respawn
             if (this.currentPowerUp) {
                 this.deactivatePowerUp();
