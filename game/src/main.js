@@ -1,14 +1,9 @@
 import { GameConfig, GameState } from './config.js';
 import MenuScene from './scenes/MenuScene.js';
-import CharacterSelectScene from './scenes/CharacterSelectScene.js';
-import MapScene from './scenes/MapScene.js';
 import UIScene from './scenes/UIScene.js';
 import GameScene from './scenes/GameScene.js';
-import BossScene from './scenes/BossScene.js';
-import PauseScene from './scenes/PauseScene.js';
 import GameOverScene from './scenes/GameOverScene.js';
 import VictoryScene from './scenes/VictoryScene.js';
-import ComicScene from './scenes/ComicScene.js';
 
 // Instance globale de l'état du jeu
 window.gameState = new GameState();
@@ -43,15 +38,10 @@ const config = {
     },
     scene: [
         MenuScene,
-        CharacterSelectScene,
-        MapScene,
         GameScene,
-        BossScene,
         UIScene,
-        PauseScene,
         GameOverScene,
-        VictoryScene,
-        ComicScene
+        VictoryScene
     ],
     pixelArt: false,
     roundPixels: true,
