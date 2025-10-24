@@ -28,18 +28,10 @@ const config = {
         }
     },
     scale: {
-        mode: Phaser.Scale.RESIZE,
+        mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH,
         width: GameConfig.width,
-        height: GameConfig.height,
-        min: {
-            width: 320,
-            height: 480
-        },
-        max: {
-            width: 1920,
-            height: 1080
-        }
+        height: GameConfig.height
     },
     scene: [
         MenuScene,
