@@ -224,48 +224,72 @@ export default class BossScene extends Phaser.Scene {
     }
 
     createTouchControls() {
-        const { width, height } = this.game.config;
+        // Utiliser les dimensions réelles de la caméra pour être responsive
+        const width = this.cameras.main.width;
+        const height = this.cameras.main.height;
 
-        this.touchControls = this.add.container(0, 0).setScrollFactor(0).setDepth(100);
+        this.touchControls = this.add.container(0, 0).setScrollFactor(0).setDepth(1000);
 
-        const btnSize = 70;
-        const btnY = height - 100;
+        // Taille responsive des boutons (12% de la largeur, max 80px)
+        const btnSize = Math.min(80, width * 0.12);
+        const margin = btnSize * 0.8;
+        const btnY = height - margin - btnSize / 2;
+
+        // Position des boutons de gauche
+        const leftX = margin + btnSize / 2;
+        const rightX = leftX + btnSize + margin / 2;
+
+        // Position des boutons de droite
+        const jumpX = width - btnSize * 2 - margin * 1.5;
+        const attackX = width - margin - btnSize / 2;
 
         // Gauche
-        this.leftBtn = this.createTouchButton(80, btnY, '◀️', btnSize);
+        this.leftBtn = this.createTouchButton(leftX, btnY, '◀️', btnSize);
         this.leftBtn.on('pointerdown', () => { this.touchLeft = true; });
         this.leftBtn.on('pointerup', () => { this.touchLeft = false; });
         this.leftBtn.on('pointerout', () => { this.touchLeft = false; });
 
         // Droite
-        this.rightBtn = this.createTouchButton(200, btnY, '▶️', btnSize);
+        this.rightBtn = this.createTouchButton(rightX, btnY, '▶️', btnSize);
         this.rightBtn.on('pointerdown', () => { this.touchRight = true; });
         this.rightBtn.on('pointerup', () => { this.touchRight = false; });
         this.rightBtn.on('pointerout', () => { this.touchRight = false; });
 
         // Saut
-        this.jumpBtn = this.createTouchButton(width - 200, btnY, '⬆️', btnSize);
+        this.jumpBtn = this.createTouchButton(jumpX, btnY, '⬆️', btnSize);
         this.jumpBtn.on('pointerdown', () => { this.jump(); });
 
         // Attaque
-        this.attackBtn = this.createTouchButton(width - 80, btnY, '⚔️', btnSize);
+        this.attackBtn = this.createTouchButton(attackX, btnY, '⚔️', btnSize);
         this.attackBtn.on('pointerdown', () => { this.shootProjectile(); });
 
         this.touchLeft = false;
         this.touchRight = false;
+
+        // Rendre les boutons plus visibles
+        this.touchControls.setAlpha(0.9);
     }
 
     createTouchButton(x, y, emoji, size) {
         const btn = this.add.container(x, y);
 
-        const bg = this.add.circle(0, 0, size / 2, 0x34495e, 0.7);
-        bg.setStrokeStyle(3, 0xffffff);
+        // Background plus visible et responsive
+        const bg = this.add.circle(0, 0, size / 2, 0x2c3e50, 0.85);
+        bg.setStrokeStyle(4, 0xecf0f1, 0.9);
 
-        const icon = this.add.text(0, 0, emoji, { fontSize: '40px' }).setOrigin(0.5);
+        // Icône avec taille responsive
+        const fontSize = Math.max(24, size * 0.5);
+        const icon = this.add.text(0, 0, emoji, {
+            fontSize: `${fontSize}px`,
+            fontFamily: 'Arial'
+        }).setOrigin(0.5);
 
         btn.add([bg, icon]);
         btn.setSize(size, size);
-        btn.setInteractive({ useHandCursor: true });
+
+        // Zone d'interaction légèrement plus grande que le bouton visible
+        const hitArea = new Phaser.Geom.Circle(0, 0, size / 1.8);
+        btn.setInteractive(hitArea, Phaser.Geom.Circle.Contains);
 
         this.touchControls.add(btn);
 

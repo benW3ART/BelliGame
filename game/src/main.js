@@ -13,7 +13,7 @@ import ComicScene from './scenes/ComicScene.js';
 // Instance globale de l'état du jeu
 window.gameState = new GameState();
 
-// Configuration de Phaser
+// Configuration de Phaser - Mobile First
 const config = {
     type: Phaser.AUTO,
     width: GameConfig.width,
@@ -28,10 +28,18 @@ const config = {
         }
     },
     scale: {
-        mode: Phaser.Scale.FIT,
+        mode: Phaser.Scale.RESIZE,
         autoCenter: Phaser.Scale.CENTER_BOTH,
         width: GameConfig.width,
-        height: GameConfig.height
+        height: GameConfig.height,
+        min: {
+            width: 320,
+            height: 480
+        },
+        max: {
+            width: 1920,
+            height: 1080
+        }
     },
     scene: [
         MenuScene,
@@ -46,7 +54,13 @@ const config = {
         ComicScene
     ],
     pixelArt: false,
-    roundPixels: true
+    roundPixels: true,
+    input: {
+        activePointers: 3
+    },
+    dom: {
+        createContainer: true
+    }
 };
 
 // Initialiser le jeu une fois que le DOM est prêt
