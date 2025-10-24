@@ -1,0 +1,11 @@
+{
+  "name": "belligame-root",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "cd game && npm install && npm start"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
