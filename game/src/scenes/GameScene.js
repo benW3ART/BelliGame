@@ -10,26 +10,18 @@ export default class GameScene extends Phaser.Scene {
     }
 
     init(data) {
-        // Use safe defaults
-        const levelNum = (data && data.level) ? data.level : 1;
-
-        // Find world for this level
-        let world = GameConfig.worlds[0]; // Default to first world
-        if (data && data.world) {
-            world = data.world;
+        // Validate input data
+        if (!data || !data.level || !data.world) {
+            console.error('GameScene initialized with invalid data:', data);
+            // Use safe defaults
+            this.currentLevelData = { level: 1, world: GameConfig.worlds[0] };
+            this.levelNum = 1;
+            this.world = GameConfig.worlds[0];
         } else {
-            // Auto-detect world from level number
-            for (let w of GameConfig.worlds) {
-                if (w.levels.includes(levelNum)) {
-                    world = w;
-                    break;
-                }
-            }
+            this.currentLevelData = data;
+            this.levelNum = data.level;
+            this.world = data.world;
         }
-
-        this.currentLevelData = { level: levelNum, world: world };
-        this.levelNum = levelNum;
-        this.world = world;
 
         this.levelCoins = 0;
         this.enemiesKilled = 0;
