@@ -1,0 +1,25 @@
+{
+  "name": "belligame",
+  "version": "1.0.0",
+  "description": "Phaser 3 Platform Game - Une aventure créée par Papa, Elon et Andy",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "phaser",
+    "game",
+    "platform"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "compression": "^1.7.4"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
