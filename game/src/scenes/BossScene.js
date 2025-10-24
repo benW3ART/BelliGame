@@ -338,7 +338,7 @@ export default class BossScene extends Phaser.Scene {
     }
 
     shootProjectile() {
-        if (!this.player.active) return;
+        if (!this.player || !this.player.active) return;
 
         const projectile = this.physics.add.sprite(this.player.x, this.player.y, null);
         const projGraphic = this.add.circle(this.player.x, this.player.y, 8, 0xFFFF00);

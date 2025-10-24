@@ -577,6 +577,8 @@ export default class GameScene extends Phaser.Scene {
     }
 
     attack() {
+        if (!this.player || !this.player.active) return;
+
         // Shoot projectile if has fireball or laser
         if (this.player.hasFireball) {
             this.shootProjectile('fireball');
@@ -594,7 +596,9 @@ export default class GameScene extends Phaser.Scene {
             duration: 100,
             yoyo: true,
             onComplete: () => {
-                this.player.setScale(0.8);
+                if (this.player && this.player.active) {
+                    this.player.setScale(0.8);
+                }
             }
         });
 
@@ -610,16 +614,19 @@ export default class GameScene extends Phaser.Scene {
         });
 
         // Vérifier si des ennemis sont à proximité
-        this.enemies.children.entries.forEach(enemy => {
-            const distance = Phaser.Math.Distance.Between(this.player.x, this.player.y, enemy.x, enemy.y);
-            if (distance < 80) {
-                this.killEnemy(enemy);
-            }
-        });
+        if (this.enemies) {
+            this.enemies.children.entries.forEach(enemy => {
+                if (!enemy.active) return;
+                const distance = Phaser.Math.Distance.Between(this.player.x, this.player.y, enemy.x, enemy.y);
+                if (distance < 80) {
+                    this.killEnemy(enemy);
+                }
+            });
+        }
     }
 
     shootProjectile(type) {
-        if (!this.player.active) return;
+        if (!this.player || !this.player.active) return;
 
         // Create projectile sprite
         const offsetX = this.player.flipX ? -30 : 30;
