@@ -23,7 +23,6 @@ export default class GameScene extends Phaser.Scene {
             this.world = data.world;
         }
 
-        this.levelScore = 0;
         this.levelCoins = 0;
         this.enemiesKilled = 0;
         this.checkpointX = 0;
@@ -245,7 +244,7 @@ export default class GameScene extends Phaser.Scene {
 
     createPlayer() {
         const { height } = this.game.config;
-        const charData = GameConfig.characters.find(c => c.id === window.gameState.character);
+        const charData = GameConfig.characters.find(c => c.id === window.gameState.character) || GameConfig.characters[0];
 
         // Créer le joueur avec le sprite personnalisé
         this.player = this.physics.add.sprite(this.checkpointX + 100, height - 200, charData.id);
@@ -292,6 +291,7 @@ export default class GameScene extends Phaser.Scene {
             const enemy = this.physics.add.sprite(x, y, enemyType);
             enemy.setScale(0.7); // Ajuster la taille
             enemy.setSize(40, 40);
+            enemy.setCollideWorldBounds(true);
 
             // IA basique: patrouille
             enemy.direction = Math.random() < 0.5 ? -1 : 1;
@@ -567,7 +567,7 @@ export default class GameScene extends Phaser.Scene {
         if (onGround) {
             this.player.setVelocityY(-this.player.jumpPower);
         } else if (this.player.canDoubleJump) {
-            this.player.setVelocityY(-400);
+            this.player.setVelocityY(-this.player.jumpPower);
             this.player.canDoubleJump = false;
         }
     }
@@ -945,6 +945,7 @@ export default class GameScene extends Phaser.Scene {
         }
 
         this.enemiesKilled++;
+        this.sessionScore += GameConfig.gameplay.enemyKillScore;
         window.gameState.addScore(GameConfig.gameplay.enemyKillScore);
 
         const uiScene = this.scene.get('UIScene');
@@ -1069,9 +1070,9 @@ export default class GameScene extends Phaser.Scene {
         this.player.setVelocity(0, 0);
         this.player.setActive(false);
 
-        // Calculer les stats
+        // Calculer les stats du niveau
         const stats = {
-            score: this.sessionScore + window.gameState.score,
+            score: this.sessionScore,
             coins: this.sessionCoins,
             enemiesKilled: this.enemiesKilled
         };

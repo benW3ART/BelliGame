@@ -141,7 +141,7 @@ export default class BossScene extends Phaser.Scene {
 
     createPlayer() {
         const { height } = this.game.config;
-        const charData = GameConfig.characters.find(c => c.id === window.gameState.character);
+        const charData = GameConfig.characters.find(c => c.id === window.gameState.character) || GameConfig.characters[0];
 
         this.player = this.physics.add.sprite(200, height - 200, charData.id);
         this.player.setScale(0.8);
@@ -325,7 +325,7 @@ export default class BossScene extends Phaser.Scene {
         if (onGround) {
             this.player.setVelocityY(-this.player.jumpPower);
         } else if (this.player.canDoubleJump) {
-            this.player.setVelocityY(-400);
+            this.player.setVelocityY(-this.player.jumpPower);
             this.player.canDoubleJump = false;
         }
     }
