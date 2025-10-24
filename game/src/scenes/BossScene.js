@@ -31,6 +31,8 @@ export default class BossScene extends Phaser.Scene {
         this.bossDefeatedFlag = false;
         this.playerDying = false;
         this.invincibilityTimer = null;
+        this.touchLeft = false;
+        this.touchRight = false;
     }
 
     preload() {

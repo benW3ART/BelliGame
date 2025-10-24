@@ -33,6 +33,8 @@ export default class GameScene extends Phaser.Scene {
         this.playerDying = false;
         this.levelCompleted = false;
         this.invincibilityTimer = null;
+        this.touchLeft = false;
+        this.touchRight = false;
     }
 
     preload() {
@@ -864,7 +866,7 @@ export default class GameScene extends Phaser.Scene {
             // Reset enemy speeds
             if (this.enemies) {
                 this.enemies.children.entries.forEach(enemy => {
-                    if (enemy.normalSpeed) {
+                    if (enemy.active && enemy.normalSpeed) {
                         enemy.speed = enemy.normalSpeed;
                     }
                 });
