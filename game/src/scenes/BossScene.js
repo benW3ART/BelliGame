@@ -458,10 +458,11 @@ export default class BossScene extends Phaser.Scene {
     }
 
     bossHitByProjectile(boss, projectile) {
-        projectile.destroy();
+        // Destroy graphic first, then projectile
         if (projectile.graphic) {
             projectile.graphic.destroy();
         }
+        projectile.destroy();
 
         // Boss prend des dégâts
         this.bossHealth -= 10;
@@ -490,10 +491,11 @@ export default class BossScene extends Phaser.Scene {
     }
 
     playerHitByProjectile(player, projectile) {
-        projectile.destroy();
+        // Destroy graphic first, then projectile
         if (projectile.graphic) {
             projectile.graphic.destroy();
         }
+        projectile.destroy();
 
         this.playerTakeDamage();
     }

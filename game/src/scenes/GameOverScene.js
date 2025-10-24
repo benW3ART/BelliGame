@@ -1,3 +1,5 @@
+import { GameConfig } from '../config.js';
+
 export default class GameOverScene extends Phaser.Scene {
     constructor() {
         super({ key: 'GameOverScene' });
@@ -63,7 +65,7 @@ export default class GameOverScene extends Phaser.Scene {
         // Recommencer
         this.createButton(width / 2, btnY, '🔄 RECOMMENCER', 0x3498db, () => {
             // Restaurer les vies
-            window.gameState.lives = 3;
+            window.gameState.lives = GameConfig.gameplay.startingLives;
             window.gameState.saveState();
 
             // Restart appropriate scene
@@ -77,7 +79,7 @@ export default class GameOverScene extends Phaser.Scene {
         // Carte du monde
         this.createButton(width / 2, btnY + 80, '🗺️ CARTE DU MONDE', 0x9b59b6, () => {
             // Restaurer les vies
-            window.gameState.lives = 3;
+            window.gameState.lives = GameConfig.gameplay.startingLives;
             window.gameState.saveState();
 
             this.scene.start('MapScene');

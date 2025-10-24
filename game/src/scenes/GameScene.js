@@ -932,6 +932,10 @@ export default class GameScene extends Phaser.Scene {
     killEnemy(enemy) {
         if (!enemy.active) return;
 
+        // Disable immediately to prevent multiple kills
+        enemy.setActive(false);
+        enemy.body.enable = false;
+
         // Effet visuel de mort d'ennemi
         this.tweens.add({
             targets: enemy,
@@ -1007,10 +1011,12 @@ export default class GameScene extends Phaser.Scene {
 
             // Respawn au checkpoint
             this.player.setPosition(this.checkpointX + 100, this.game.config.height - 200);
+            this.player.setVelocity(0, 0); // Reset velocity
             this.player.setActive(true);
             this.player.setAlpha(1);
             this.player.setAngle(0);
             this.player.setScale(0.8);
+            this.player.canDoubleJump = true; // Reset double jump
 
             // Reset all player flags
             this.player.isInvincible = false;

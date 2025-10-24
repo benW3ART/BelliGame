@@ -122,32 +122,42 @@ export class GameState {
     loadState() {
         const saved = localStorage.getItem('gameState');
         if (saved) {
-            const data = JSON.parse(saved);
-            this.currentLevel = data.niveau || 1;
-            this.character = data.personnage || 'sonic';
-            this.lives = data.vies || GameConfig.gameplay.startingLives;
-            this.score = data.score || 0;
-            this.coins = data.pieces || 0;
-            this.unlockedLevels = data.unlockedLevels || [1];
-            this.musicEnabled = data.musicEnabled !== undefined ? data.musicEnabled : true;
-            this.sfxEnabled = data.sfxEnabled !== undefined ? data.sfxEnabled : true;
+            try {
+                const data = JSON.parse(saved);
+                this.currentLevel = data.niveau || 1;
+                this.character = data.personnage || 'sonic';
+                this.lives = data.vies || GameConfig.gameplay.startingLives;
+                this.score = data.score || 0;
+                this.coins = data.pieces || 0;
+                this.unlockedLevels = data.unlockedLevels || [1];
+                this.musicEnabled = data.musicEnabled !== undefined ? data.musicEnabled : true;
+                this.sfxEnabled = data.sfxEnabled !== undefined ? data.sfxEnabled : true;
+            } catch (e) {
+                console.error('Failed to parse saved game state, resetting:', e);
+                this.reset();
+            }
         } else {
             this.reset();
         }
     }
 
     saveState() {
-        const data = {
-            niveau: this.currentLevel,
-            personnage: this.character,
-            vies: this.lives,
-            score: this.score,
-            pieces: this.coins,
-            unlockedLevels: this.unlockedLevels,
-            musicEnabled: this.musicEnabled,
-            sfxEnabled: this.sfxEnabled
-        };
-        localStorage.setItem('gameState', JSON.stringify(data));
+        try {
+            const data = {
+                niveau: this.currentLevel,
+                personnage: this.character,
+                vies: this.lives,
+                score: this.score,
+                pieces: this.coins,
+                unlockedLevels: this.unlockedLevels,
+                musicEnabled: this.musicEnabled,
+                sfxEnabled: this.sfxEnabled
+            };
+            localStorage.setItem('gameState', JSON.stringify(data));
+        } catch (e) {
+            console.error('Failed to save game state:', e);
+            // Continue without saving - don't break the game
+        }
     }
 
     reset() {
