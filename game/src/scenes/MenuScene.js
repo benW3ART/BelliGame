@@ -23,9 +23,6 @@ export default class MenuScene extends Phaser.Scene {
 
     create() {
         this.createUI();
-
-        // Écouter les changements de taille
-        this.scale.on('resize', this.resize, this);
     }
 
     createUI() {
@@ -212,11 +209,6 @@ export default class MenuScene extends Phaser.Scene {
         return button;
     }
 
-    resize(gameSize) {
-        // Recréer l'interface avec les nouvelles dimensions
-        this.createUI();
-    }
-
     showOptionsModal() {
         const width = this.cameras.main.width;
         const height = this.cameras.main.height;
@@ -380,9 +372,5 @@ export default class MenuScene extends Phaser.Scene {
             creditsText.destroy();
             closeBtn.destroy();
         });
-    }
-
-    shutdown() {
-        this.scale.off('resize', this.resize, this);
     }
 }

@@ -4,6 +4,7 @@ import { CharacterSprites } from '../CharacterSprites.js';
 export default class CharacterSelectScene extends Phaser.Scene {
     constructor() {
         super({ key: 'CharacterSelectScene' });
+        this.uiElements = [];
     }
 
     preload() {
@@ -14,85 +15,113 @@ export default class CharacterSelectScene extends Phaser.Scene {
     }
 
     create() {
-        const { width, height } = this.game.config;
+        this.createUI();
 
-        // Background
-        this.add.rectangle(0, 0, width, height, 0x667eea).setOrigin(0);
+        // Écouter les changements de taille
+        this.scale.on('resize', this.resize, this);
+    }
 
-        // Titre
-        this.add.text(width / 2, 80, 'CHOISIS TON HÉROS', {
-            fontSize: '52px',
+    createUI() {
+        // Nettoyer les éléments existants
+        this.uiElements.forEach(el => {
+            if (el.destroy) el.destroy();
+        });
+        this.uiElements = [];
+
+        const width = this.cameras.main.width;
+        const height = this.cameras.main.height;
+
+        // Background plein écran
+        const bg = this.add.rectangle(width / 2, height / 2, width * 2, height * 2, 0x667eea);
+        this.uiElements.push(bg);
+
+        // Titre responsive
+        const titleSize = Math.min(width * 0.08, 52);
+        const title = this.add.text(width / 2, height * 0.1, 'CHOISIS TON HÉROS', {
+            fontSize: `${titleSize}px`,
             fontFamily: 'Arial Black',
             color: '#ffffff',
             stroke: '#000000',
-            strokeThickness: 8
+            strokeThickness: Math.max(4, titleSize * 0.15)
         }).setOrigin(0.5);
+        this.uiElements.push(title);
 
-        // Grille de personnages
-        const cols = 4;
-        const rows = 3;
-        const startX = 200;
-        const startY = 200;
-        const spacingX = 250;
-        const spacingY = 180;
+        // Grille responsive de personnages
+        const isMobile = width < 768;
+        const cols = isMobile ? 2 : 4;
+        const rows = Math.ceil(GameConfig.characters.length / cols);
+
+        // Calculer les dimensions des cartes
+        const availableWidth = width * 0.9;
+        const availableHeight = height * 0.7;
+        const cardWidth = Math.min(200, (availableWidth / cols) - 20);
+        const cardHeight = Math.min(140, cardWidth * 0.7);
+        const spacingX = (availableWidth - (cardWidth * cols)) / (cols + 1);
+        const spacingY = Math.min(30, (availableHeight - (cardHeight * rows)) / (rows + 1));
+
+        const startX = (width - availableWidth) / 2 + spacingX + cardWidth / 2;
+        const startY = height * 0.2 + spacingY + cardHeight / 2;
 
         GameConfig.characters.forEach((char, index) => {
             const col = index % cols;
             const row = Math.floor(index / cols);
-            const x = startX + col * spacingX;
-            const y = startY + row * spacingY;
+            const x = startX + col * (cardWidth + spacingX);
+            const y = startY + row * (cardHeight + spacingY);
 
-            this.createCharacterCard(x, y, char);
+            const card = this.createCharacterCard(x, y, cardWidth, cardHeight, char);
+            this.uiElements.push(card);
         });
 
-        // Bouton retour
-        const backBtn = this.add.text(80, height - 80, '← RETOUR', {
-            fontSize: '28px',
+        // Bouton retour responsive
+        const btnSize = Math.min(width * 0.035, 28);
+        const backBtn = this.add.text(width * 0.05, height * 0.95, '← RETOUR', {
+            fontSize: `${btnSize}px`,
             fontFamily: 'Arial Black',
             color: '#ffffff',
             backgroundColor: '#e74c3c',
             padding: { x: 20, y: 10 }
-        }).setInteractive({ useHandCursor: true });
+        }).setOrigin(0, 1).setInteractive({ useHandCursor: true });
+        this.uiElements.push(backBtn);
 
         backBtn.on('pointerdown', () => {
             this.scene.start('MenuScene');
         });
     }
 
-    createCharacterCard(x, y, character) {
+    createCharacterCard(x, y, cardWidth, cardHeight, character) {
         const card = this.add.container(x, y);
 
         // Carte de fond
-        const bg = this.add.rectangle(0, 0, 200, 140, 0x34495e);
+        const bg = this.add.rectangle(0, 0, cardWidth, cardHeight, 0x34495e);
         bg.setStrokeStyle(4, character.color);
 
-        // Sprite du personnage
-        const avatar = this.add.sprite(0, -15, character.id);
-        avatar.setScale(0.5); // Taille réduite pour la carte
+        // Sprite du personnage - taille adaptive
+        const spriteScale = Math.min(0.5, cardWidth / 160);
+        const avatar = this.add.sprite(0, -cardHeight * 0.15, character.id);
+        avatar.setScale(spriteScale);
 
-        // Nom du personnage
-        const name = this.add.text(0, 50, character.name, {
-            fontSize: '16px',
+        // Nom du personnage - taille adaptive
+        const nameSize = Math.min(16, cardWidth * 0.08);
+        const name = this.add.text(0, cardHeight * 0.35, character.name, {
+            fontSize: `${nameSize}px`,
             fontFamily: 'Arial',
             color: '#ffffff',
             align: 'center',
-            wordWrap: { width: 180 }
+            wordWrap: { width: cardWidth - 20 }
         }).setOrigin(0.5);
 
         // Indicateur de sélection
-        let selected = false;
         if (window.gameState.character === character.id) {
-            selected = true;
             bg.setFillStyle(0x2c3e50);
-            const checkmark = this.add.text(70, -60, '✓', {
-                fontSize: '32px',
+            const checkmark = this.add.text(cardWidth * 0.35, -cardHeight * 0.42, '✓', {
+                fontSize: `${Math.min(32, cardWidth * 0.16)}px`,
                 color: '#4CAF50'
             });
             card.add(checkmark);
         }
 
         card.add([bg, avatar, name]);
-        card.setSize(200, 140);
+        card.setSize(cardWidth, cardHeight);
         card.setInteractive({ useHandCursor: true });
 
         // Effet hover
@@ -134,5 +163,14 @@ export default class CharacterSelectScene extends Phaser.Scene {
         });
 
         return card;
+    }
+
+    resize(gameSize) {
+        // Recréer l'interface avec les nouvelles dimensions
+        this.createUI();
+    }
+
+    shutdown() {
+        this.scale.off('resize', this.resize, this);
     }
 }
