@@ -885,6 +885,9 @@ export default class GameScene extends Phaser.Scene {
             delay: 100,
             callback: () => {
                 this.coins.children.entries.forEach(coin => {
+                    // Skip if coin is collected or body disabled
+                    if (!coin.active || !coin.body || !coin.body.enable) return;
+
                     const distance = Phaser.Math.Distance.Between(this.player.x, this.player.y, coin.x, coin.y);
                     if (distance < 300) {
                         this.physics.moveToObject(coin, this.player, 200);
@@ -893,13 +896,7 @@ export default class GameScene extends Phaser.Scene {
             },
             loop: true
         });
-
-        // Arrêter après la durée
-        this.time.delayedCall(10000, () => {
-            if (this.magnetInterval) {
-                this.magnetInterval.remove();
-            }
-        });
+        // Note: interval will be cleaned up by deactivatePowerUp() when power-up expires
     }
 
     startClockEffect() {
