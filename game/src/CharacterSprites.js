@@ -754,7 +754,11 @@ export class CharacterSprites {
         graphics.beginPath();
         graphics.moveTo(-16, 16);
         graphics.lineTo(-16, 26);
-        graphics.quadraticCurveTo(-12, 28, -8, 26);
+        // Approximation de la courbe avec des segments
+        graphics.lineTo(-14, 27);
+        graphics.lineTo(-12, 28);
+        graphics.lineTo(-10, 27);
+        graphics.lineTo(-8, 26);
         graphics.lineTo(-8, 16);
         graphics.closePath();
         graphics.fillPath();
@@ -762,7 +766,11 @@ export class CharacterSprites {
         graphics.beginPath();
         graphics.moveTo(16, 16);
         graphics.lineTo(16, 26);
-        graphics.quadraticCurveTo(12, 28, 8, 26);
+        // Approximation de la courbe avec des segments
+        graphics.lineTo(14, 27);
+        graphics.lineTo(12, 28);
+        graphics.lineTo(10, 27);
+        graphics.lineTo(8, 26);
         graphics.lineTo(8, 16);
         graphics.closePath();
         graphics.fillPath();
