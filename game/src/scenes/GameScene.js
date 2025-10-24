@@ -506,7 +506,7 @@ export default class GameScene extends Phaser.Scene {
     }
 
     update() {
-        if (!this.player || !this.player.active) return;
+        if (!this.player || !this.player.active || !this.player.body) return;
 
         // Mettre à jour les ennemis
         this.updateEnemies();
@@ -564,6 +564,8 @@ export default class GameScene extends Phaser.Scene {
     }
 
     jump() {
+        if (!this.player || !this.player.active || !this.player.body) return;
+
         const onGround = this.player.body.touching.down;
 
         if (onGround) {
@@ -697,7 +699,9 @@ export default class GameScene extends Phaser.Scene {
         coin.collected = true;
 
         // Disable physics immediately
-        coin.body.enable = false;
+        if (coin.body) {
+            coin.body.enable = false;
+        }
 
         // Effet de collecte
         this.tweens.add({
@@ -727,7 +731,9 @@ export default class GameScene extends Phaser.Scene {
         powerUp.collected = true;
 
         // Disable physics immediately
-        powerUp.body.enable = false;
+        if (powerUp.body) {
+            powerUp.body.enable = false;
+        }
 
         // Vérifier si c'est un cœur (vie)
         if (powerUp.isHeart) {
@@ -884,6 +890,9 @@ export default class GameScene extends Phaser.Scene {
         this.magnetInterval = this.time.addEvent({
             delay: 100,
             callback: () => {
+                // Safety checks
+                if (!this.player || !this.player.active || !this.coins) return;
+
                 this.coins.children.entries.forEach(coin => {
                     // Skip if coin is collected or body disabled
                     if (!coin.active || !coin.body || !coin.body.enable) return;
@@ -934,7 +943,9 @@ export default class GameScene extends Phaser.Scene {
 
         // Disable immediately to prevent multiple kills
         enemy.setActive(false);
-        enemy.body.enable = false;
+        if (enemy.body) {
+            enemy.body.enable = false;
+        }
 
         // Effet visuel de mort d'ennemi
         this.tweens.add({

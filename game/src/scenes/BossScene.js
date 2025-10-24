@@ -283,7 +283,7 @@ export default class BossScene extends Phaser.Scene {
     }
 
     update() {
-        if (!this.player || !this.player.active) return;
+        if (!this.player || !this.player.active || !this.player.body) return;
 
         // Déplacements joueur
         const onGround = this.player.body.touching.down;
@@ -325,6 +325,8 @@ export default class BossScene extends Phaser.Scene {
     }
 
     jump() {
+        if (!this.player || !this.player.active || !this.player.body) return;
+
         const onGround = this.player.body.touching.down;
 
         if (onGround) {
