@@ -1,8 +1,8 @@
 // Configuration globale du jeu
 export const GameConfig = {
-    // Dimensions
-    width: 1280,
-    height: 720,
+    // Dimensions - Mobile First
+    width: 800,
+    height: 600,
 
     // Personnages jouables
     characters: [
