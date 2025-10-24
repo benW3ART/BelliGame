@@ -108,6 +108,7 @@ export default class MapScene extends Phaser.Scene {
 
     createClouds() {
         const width = this.cameras.main.width;
+        const height = this.cameras.main.height;
         const cloudCount = Math.min(5, Math.floor(width / 250));
 
         for (let i = 0; i < cloudCount; i++) {
