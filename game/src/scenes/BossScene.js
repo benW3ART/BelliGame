@@ -9,6 +9,7 @@ export default class BossScene extends Phaser.Scene {
     }
 
     init(data) {
+        this.currentLevelData = data; // Store for restart functionality
         this.levelNum = data.level;
         this.world = data.world;
         this.bossData = this.getBossData();

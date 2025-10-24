@@ -181,7 +181,7 @@ export class GameState {
     }
 
     loseLife() {
-        this.lives--;
+        this.lives = Math.max(0, this.lives - 1);
         this.saveState();
         return this.lives;
     }

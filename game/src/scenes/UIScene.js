@@ -55,7 +55,16 @@ export default class UIScene extends Phaser.Scene {
         }).setInteractive({ useHandCursor: true });
 
         pauseBtn.on('pointerdown', () => {
-            this.scene.pause('GameScene');
+            // Detect which game scene is running
+            const gameSceneActive = this.scene.isActive('GameScene');
+            const bossSceneActive = this.scene.isActive('BossScene');
+
+            if (gameSceneActive) {
+                this.scene.pause('GameScene');
+            } else if (bossSceneActive) {
+                this.scene.pause('BossScene');
+            }
+
             this.scene.launch('PauseScene');
         });
 

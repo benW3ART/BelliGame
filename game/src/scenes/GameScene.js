@@ -716,6 +716,11 @@ export default class GameScene extends Phaser.Scene {
             this.player.clearTint();
         } else if (this.currentPowerUp === 'magnet') {
             this.player.clearTint();
+            // Clear magnet interval
+            if (this.magnetInterval) {
+                this.magnetInterval.remove();
+                this.magnetInterval = null;
+            }
         }
 
         this.currentPowerUp = null;

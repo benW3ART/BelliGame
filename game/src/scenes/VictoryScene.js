@@ -93,9 +93,18 @@ export default class VictoryScene extends Phaser.Scene {
 
                 // Vérifier si c'est un nouveau monde
                 const nextWorld = data.worlds.find(w => w.levels.includes(nextLevel));
+
+                // Vérifier si c'est un niveau de boss
+                const isBossLevel = nextWorld && nextWorld.levels[nextWorld.levels.length - 1] === nextLevel;
+
                 if (nextWorld && nextWorld.levels[0] === nextLevel && nextWorld.id > 1) {
+                    // Premier niveau d'un nouveau monde -> montrer BD
                     this.scene.start('ComicScene', { worldId: nextWorld.id, levelNum: nextLevel });
+                } else if (isBossLevel) {
+                    // Niveau de boss
+                    this.scene.start('BossScene', { level: nextLevel, world: nextWorld });
                 } else {
+                    // Niveau normal
                     this.scene.start('GameScene', { level: nextLevel, world: nextWorld });
                 }
             });

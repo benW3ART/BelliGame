@@ -6,6 +6,9 @@ export default class PauseScene extends Phaser.Scene {
     create() {
         const { width, height } = this.game.config;
 
+        // Detect which game scene is paused
+        this.pausedScene = this.scene.isPaused('GameScene') ? 'GameScene' : 'BossScene';
+
         // Overlay semi-transparent
         const overlay = this.add.rectangle(0, 0, width, height, 0x000000, 0.7).setOrigin(0);
 
@@ -25,7 +28,7 @@ export default class PauseScene extends Phaser.Scene {
         // Reprendre
         this.createButton(width / 2, currentY, '▶️ REPRENDRE', 0x4CAF50, () => {
             this.scene.stop();
-            this.scene.resume('GameScene');
+            this.scene.resume(this.pausedScene);
         });
 
         currentY += btnSpacing;
@@ -33,11 +36,12 @@ export default class PauseScene extends Phaser.Scene {
         // Recommencer le niveau
         this.createButton(width / 2, currentY, '🔄 RECOMMENCER', 0x3498db, () => {
             this.scene.stop();
-            this.scene.stop('GameScene');
+            this.scene.stop(this.pausedScene);
             this.scene.stop('UIScene');
-            const gameScene = this.scene.get('GameScene');
-            if (gameScene && gameScene.currentLevelData) {
-                this.scene.start('GameScene', gameScene.currentLevelData);
+
+            const pausedSceneRef = this.scene.get(this.pausedScene);
+            if (pausedSceneRef && pausedSceneRef.currentLevelData) {
+                this.scene.start(this.pausedScene, pausedSceneRef.currentLevelData);
             }
         });
 
@@ -46,7 +50,7 @@ export default class PauseScene extends Phaser.Scene {
         // Carte du monde
         this.createButton(width / 2, currentY, '🗺️ CARTE DU MONDE', 0x9b59b6, () => {
             this.scene.stop();
-            this.scene.stop('GameScene');
+            this.scene.stop(this.pausedScene);
             this.scene.stop('UIScene');
             this.scene.start('MapScene');
         });
@@ -56,7 +60,7 @@ export default class PauseScene extends Phaser.Scene {
         // Menu principal
         this.createButton(width / 2, currentY, '🏠 MENU PRINCIPAL', 0xe74c3c, () => {
             this.scene.stop();
-            this.scene.stop('GameScene');
+            this.scene.stop(this.pausedScene);
             this.scene.stop('UIScene');
             this.scene.start('MenuScene');
         });

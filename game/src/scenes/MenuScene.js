@@ -15,6 +15,9 @@ export default class MenuScene extends Phaser.Scene {
         // Background gradient
         graphics.fillGradientStyle(0x667eea, 0x667eea, 0x764ba2, 0x764ba2, 1);
         graphics.fillRect(0, 0, this.game.config.width, this.game.config.height);
+
+        // Destroy graphics after use to prevent memory leak
+        graphics.destroy();
     }
 
     create() {
